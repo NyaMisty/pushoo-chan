@@ -38,22 +38,24 @@ router.all('/', async (req: Request, res: Response) => {
         chans = [getDefaultChannel()];
     }
 
-    let results = [];
+    let results: string[] = [];
     if (chans.length === 1 && <string>chans[0].type === "stub") {
         dolog('Error: default push channel has invalid type: stub, please finish the setup!')
     } else {
-        for (const curChan of chans) {
-            const result = await pushoo(curChan.type, {
-                token: curChan.token,
-                title: text,
-                content: desp
-            });
-            if (result.error) {
-                results.push("push error: " + result.error.toString())
-            } else {
-                results.push("push success: " + JSON.stringify(result))
+        results = await Promise.all(chans.map(
+            async (chan: ChannelConfig) => {
+                const result = await pushoo(chan.type, {
+                    token: chan.token,
+                    title: text,
+                    content: desp
+                });
+                if (result.error) {
+                    return "push error: " + result.error.toString();
+                } else {
+                    return "push success: " + JSON.stringify(result)
+                }
             }
-        }
+        ))
     }
     
     logger.info("Got results: " + JSON.stringify(results) + " msg: " + JSON.stringify(msg))
