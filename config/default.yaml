@@ -1,0 +1,6 @@
+channels:
+  - name: stub
+    type: stub
+    token: stub
+
+default_channel: "stub"
