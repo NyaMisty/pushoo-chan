@@ -1,23 +1,17 @@
-import config from 'config';
-import { ChannelType } from 'pushoo';
-
-
-export type ChannelConfig = {
-    name: string
-    type: ChannelType
-    token: string
-}
+import { getConfig } from '@config/index';
+import { ChannelConfig } from '@config/type';
 
 export function getDefaultChannel() {
-    const defChannel = config.get<string>('default_channel');
-    return getAllChannel()[defChannel]
+    return getAllChannel()[getConfig().default_channel]
 }
 
 export function getAllChannel() {
-    const channels : ChannelConfig[] = config.get('channels');
+    const channels : ChannelConfig[] = getConfig().channels;
     let ret: {[index: string]: ChannelConfig} = {};
     for (const channel of channels) {
         ret[channel.name] = channel;
     }
     return ret;
 }
+
+export { ChannelConfig } from '@config/type';

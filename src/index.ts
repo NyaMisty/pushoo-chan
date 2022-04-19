@@ -1,5 +1,5 @@
 import './pre-start'; // Must be the first import
-import logger from 'jet-logger';
+import logger from './shims/logger';
 import server from './server';
 
 

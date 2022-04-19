@@ -8,11 +8,8 @@ import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
 
 import logger from 'jet-logger';
-import { CustomError } from '@shared/errors';
 
-import sendRouter from './routes/send';
-
-process.env["NODE_CONFIG_DIR"] = __dirname + "/config" + require('path').delimiter + __dirname + "/user_config"
+process.env["NODE_CONFIG_DIR"] = process.cwd() + "/config" + require('path').delimiter + process.cwd() + "/user_config"
 
 // Constants
 const app = express();
@@ -42,14 +39,16 @@ if (process.env.NODE_ENV === 'production') {
  *                         API routes and error handling
  **********************************************************************************/
 
+ import sendRouter from './routes/send';
+
 // Add api router
 app.use('/send', sendRouter);
+// app.use('/config', configRouter);
 
 // Error handling
-app.use((err: Error | CustomError, _: Request, res: Response, __: NextFunction) => {
+app.use((err: Error, _: Request, res: Response, __: NextFunction) => {
     logger.err(err, true);
-    const status = (err instanceof CustomError ? err.HttpStatus : StatusCodes.BAD_REQUEST);
-    return res.status(status).json({
+    return res.status(StatusCodes.BAD_REQUEST).json({
         error: err.message,
     });
 });
@@ -59,19 +58,9 @@ app.use((err: Error | CustomError, _: Request, res: Response, __: NextFunction) 
  *                                  Front-end content
  **********************************************************************************/
 
-// Set views dir
-const viewsDir = path.join(__dirname, 'views');
-app.set('views', viewsDir);
-
 // Set static dir
-const staticDir = path.join(__dirname, 'public');
+const staticDir = path.join(__dirname, 'static');
 app.use(express.static(staticDir));
-
-// Serve index.html file
-app.get('*', (_: Request, res: Response) => {
-    res.sendFile('index.html', {root: viewsDir});
-});
-
 
 
 // Export here and start in a diff file (for testing).

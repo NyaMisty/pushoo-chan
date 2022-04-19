@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+<style type="text/css" media="screen">
+    #editor { 
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+</style>
+</head>
+<body>
+
+<div id="editor">channels:
+
+</div>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/yaml");
+
+    $.ajax({
+        url: "/config/download",
+        xhrFields: {
+            withCredentials: true
+        }
+    }).done((data) => {
+        editor.setValue(data)
+    })
+
+    editor.commands.addCommand({
+        name: 'Save',
+        bindKey: {win: 'Ctrl-S',  mac: 'Command-S'},
+        exec: function(editor) {
+            $.ajax({
+                type: 'POST',
+                url: "/config/upload",
+                data: editor.getValue(),
+                dataType: "text",
+                contentType: "text/plain",
+                xhrFields: {
+                    withCredentials: true
+                }
+            }).done((data) => {
+                alert("Successfully saved config! server return: " + data)
+            }).fail((err) => {
+                alert("Failed to save config! server return: " + err)
+            })
+        },
+        readOnly: true, // false if this command should not apply in readOnly mode
+        // multiSelectAction: "forEach", optional way to control behavior with multiple cursors
+        // scrollIntoView: "cursor", control how cursor is scolled into view after the command
+    });
+</script>
+</body>
+</html>

@@ -15,7 +15,7 @@
     "ignore": [
       "src/public"
     ],
-    "exec": "npm exec -c \"ts-node -r tsconfig-paths/register ./src\""
+    "exec": "npx ts-node -r tsconfig-paths/register ./src/starter/node-http"
   },
   "_moduleAliases": {
     "@shared": "dist/shared",
@@ -66,13 +66,18 @@
     "express-async-errors": "^3.1.1",
     "helmet": "^5.0.2",
     "http-status-codes": "^2.2.0",
+    "itty-router": "^2.6.1",
     "jet-logger": "^1.1.5",
     "jsonfile": "^6.1.0",
     "module-alias": "^2.2.2",
     "morgan": "^1.10.0",
-    "pushoo": "^0.0.9"
+    "node-fetch": "^2.6.1",
+    "pushoo": "^0.0.9",
+    "sunder": "^0.10.1",
+    "yaml": "^2.0.1"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^3.5.1",
     "@types/command-line-args": "^5.2.0",
     "@types/config": "^0.0.41",
     "@types/cookie-parser": "^1.4.2",
@@ -83,6 +88,7 @@
     "@types/jsonfile": "^6.1.0",
     "@types/morgan": "^1.9.3",
     "@types/node": "^17.0.24",
+    "@types/node-fetch": "^2.6.1",
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",

@@ -1,21 +1,24 @@
-import logger from 'jet-logger';
+import logger from '@shims/logger';
 
-import { Request, Response, Router } from 'express';
+//import { Request, Response, Router } from '@shims/router';
+import { Router, Request } from 'itty-router';
 
 import pushoo from 'pushoo';
 import { ChannelConfig, getAllChannel, getDefaultChannel } from '@models/channels';
+import { RequestShim } from '@shims/request';
 
-const router = Router();
+const router = Router({ base: '/send' });
 
-router.all('/', async (req: Request, res: Response) => {
-    const text = req.body.text || req.query.text;
-    const desp = req.body.desp || req.query.desp;
-    const channame = req.body.chan || req.query.chan;
+router.all('/', async (req: RequestShim) => {
+    const text = req.bodyobj?.text || req.query?.text;
+    const desp = req.bodyobj?.desp || req.query?.desp;
+    const channame = req.bodyobj?.chan || req.query?.chan;
     logger.info("Got send request: \n    text: " + text + "\n    desp: " + desp + "\n    chan: " + channame);
 
     let msg: string[] = [];
 
     const dolog = (logmsg: string) => {
+        // console.log(logmsg)
         msg.push(logmsg)
     }
 
@@ -38,16 +41,17 @@ router.all('/', async (req: Request, res: Response) => {
         chans = [getDefaultChannel()];
     }
 
+    // console.log(chans);
     let results: string[] = [];
-    if (chans.length === 1 && <string>chans[0].type === "stub") {
-        dolog('Error: default push channel has invalid type: stub, please finish the setup!')
+    if (chans.length === 1 && (!chans[0] || chans[0].type as string === "stub")) {
+        dolog('Error: default push channel invalid, please finish the setup!')
     } else {
         results = await Promise.all(chans.map(
             async (chan: ChannelConfig) => {
                 const result = await pushoo(chan.type, {
                     token: chan.token,
                     title: text,
-                    content: desp
+                    content: <string>desp
                 });
                 if (result.error) {
                     return "push error: " + result.error.toString();
@@ -59,10 +63,13 @@ router.all('/', async (req: Request, res: Response) => {
     }
     
     logger.info("Got results: " + JSON.stringify(results) + " msg: " + JSON.stringify(msg))
-    return res.status(200).json({
-        results: results.length ? results : undefined,
-        msg: msg.length ? msg : undefined
-    });
+    return {
+        status: 200,
+        body: JSON.stringify({
+            results: results.length ? results : undefined,
+            msg: msg.length ? msg : undefined
+        })
+    }
 });
 
 

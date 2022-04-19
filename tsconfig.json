@@ -77,6 +77,12 @@
       ],
       "@routes/*": [
         "src/routes/*"
+      ],
+      "@shims/*": [
+        "src/shims/*"
+      ],
+      "@config/*": [
+        "src/config/*"
       ]
     },
     "useUnknownInCatchVariables": false

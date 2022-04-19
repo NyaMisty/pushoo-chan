@@ -1,0 +1,47 @@
+export type Request = {
+    method: string,
+    body: any,
+    query: any,
+    rawBody: string,
+}
+
+export type Response = {
+    status: number,
+    body: string
+}
+
+export interface IRouterHandler {
+    (req: Request): (Response | Promise<Response>)
+}
+
+export type Route = {
+    type: string
+    path: string
+    handler: IRouterHandler
+}
+
+export class RouterShim {
+    paths: Route[] = [];
+    RouterShim() {
+        this.paths = []
+    }
+    _addpath(type: string, path: string, handler: IRouterHandler) {
+        this.paths.push({
+            type, path, handler
+        })
+    }
+    all(path: string, handler: IRouterHandler) {
+        this._addpath('all', path, handler)
+    };
+    get(path: string, handler: IRouterHandler) {
+        this._addpath('get', path, handler)
+    };
+    post(path: string, handler: IRouterHandler) {
+        this._addpath('post', path, handler)
+    };
+}
+
+
+export function Router() {
+    return new RouterShim();
+}
