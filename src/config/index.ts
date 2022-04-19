@@ -2,17 +2,19 @@ import { Config } from '@config/type';
 import { readConfigFile, writeConfigFile } from '@shims/fs';
 import YAML from 'yaml';
 
-let curConfig: Config | null = null;
+import NodeCache from 'node-cache'
+
+const configCache = new NodeCache({
+    stdTTL: 8,
+    checkperiod: 0, // use this, or Cloudflare fails
+    deleteOnExpire: false,
+})
 
 const CONFIG_FILE = "config.yaml"
 
 export async function refreshConfig() {
-    curConfig = null;
+    configCache.del('config')
     await getConfig()
-}
-
-export async function getRawConfig() {
-    return await readConfigFile(CONFIG_FILE)
 }
 
 const DEFAULT_CONFIG = 
@@ -29,10 +31,21 @@ auth:
     #pass: pushoo
 `
 
+export async function getRawConfig() {
+    const ret = await readConfigFile(CONFIG_FILE)
+    if (!ret) {
+        return DEFAULT_CONFIG
+    }
+    return ret
+}
+
+
 export async function getConfig() {
-    if (curConfig === null) {
-        const rawConfig = await getRawConfig() || DEFAULT_CONFIG
+    let curConfig = configCache.get<Config>('config')
+    if (!curConfig) {
+        const rawConfig = await getRawConfig()
         curConfig = <Config>YAML.parse(rawConfig)
+        configCache.set<Config>('config', curConfig)
     }
     return curConfig
 }
