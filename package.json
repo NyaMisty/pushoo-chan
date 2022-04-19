@@ -20,10 +20,10 @@
     "exec": "npx ts-node -r tsconfig-paths/register ./src/starter/node-http"
   },
   "_moduleAliases": {
-    "@shared": "dist/shared",
     "@models": "dist/models",
-    "@server": "dist/server",
-    "@routes": "dist/routes"
+    "@routes": "dist/routes",
+    "@shims": "dist/shims",
+    "@config": "dist/config"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
