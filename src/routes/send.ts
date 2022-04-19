@@ -54,10 +54,19 @@ router.all('/', async (req: RequestShim) => {
     } else {
         results = await Promise.all(chans.map(
             async (chan: ChannelConfig) => {
+                // if text = null, desp != null, send desp only
+                // if text != null, desp = null, send text only
+                // if text = null, desp = null, send empty thing
+                let content: string = desp ?? "";
+                let title = text;
+                if (desp === undefined) {
+                    content = text ?? ""
+                    title = undefined
+                }
                 const result = await pushoo(chan.type, {
                     token: chan.token,
-                    title: text,
-                    content: <string>desp
+                    title,
+                    content
                 });
                 if (result.error) {
                     const err: Error = result.error
