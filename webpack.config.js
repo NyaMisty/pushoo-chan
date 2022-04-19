@@ -15,7 +15,8 @@ module.exports = {
   },
   resolve: {
     fallback: {
-      "path": require.resolve("path-browserify")
+      "path": require.resolve("path-browserify"),
+      "buffer": require.resolve("buffer"),
     },
     plugins: [new TsconfigPathsPlugin({})],
     extensions: ['.ts', '.tsx', '.js', '...'],

@@ -14,9 +14,10 @@ router.all('/', async (req: RequestShim) => {
     const desp = req.bodyobj?.desp || req.query?.desp;
     const channame = req.bodyobj?.chan || req.query?.chan;
     logger.info("Got send request: \n"
-                + "    text: " + text + "\n"
-                + "    desp: " + desp + "\n"
-                + "    chan: " + channame);
+                + `    text: ${text ?? 'undefined'}\n`
+                + `    desp: ${desp ?? 'undefined'}\n`
+                + `    chan: ${channame ?? 'undefined'}`
+                );
 
     const msg: string[] = [];
 
@@ -69,7 +70,7 @@ router.all('/', async (req: RequestShim) => {
         ))
     }
     
-    logger.info("Got results: " + JSON.stringify(results) + " msg: " + JSON.stringify(msg))
+    logger.info(`Got results: ${JSON.stringify(results)} msg: ${JSON.stringify(msg)}`)
     return {
         status: 200,
         body: JSON.stringify({

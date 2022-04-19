@@ -63,6 +63,7 @@
   "dependencies": {
     "@vespaiach/axios-fetch-adapter": "^0.2.2",
     "basic-auth": "^2.0.1",
+    "buffer": "^6.0.3",
     "command-line-args": "^5.2.1",
     "cookie-parser": "^1.4.6",
     "helmet": "^5.0.2",
