@@ -20,7 +20,21 @@ const _fs = require('@shims/fs')
 _fs.readConfigFile = async (filename: string) => await KVConfig?.get(filename)
 _fs.writeConfigFile = async (filename: string, content: string) => 
     await KVConfig?.put(filename, content)
-_fs.readStaticFile = (filename: string) => ""
+
+const STATIC_FILE_ROOTURL = 
+    "https://raw.githubusercontent.com/NyaMisty/pushoo-chan/master/src/static/"
+_fs.readStaticFile = async (filename: string) => {
+    try {
+        const fileresp = await axios.get(
+            STATIC_FILE_ROOTURL + filename, 
+            { transformResponse: (r) => <unknown>r });
+        return <string>fileresp.data
+    } catch (e) {
+        const _e = <Error>e
+        logger.warn(`query static file failed: ${filename} ${_e.toString()}`)
+        return null
+    }
+}
 
 
 import axios from "axios"
@@ -36,6 +50,7 @@ import itty from "itty-router";
 import allRouter from '@routes/index';
 import { RequestShim, ResponseShim } from '@shims/request';
 import { Request } from "node-fetch";
+import logger from '@shims/logger';
 
 const getRawBody = async (request: Request) => {
     const buf = await request.text();
