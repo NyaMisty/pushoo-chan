@@ -13,9 +13,9 @@
 - **安装**：Release下载bundle.js，Cloudflare新建Worker，绑定KV变量名`PUSHOO_CONFIG` （详见 #安装部署）
 
 - **配置**：打开部署好的服务，编辑配置文件，使用Ctrl-S保存 （具体配置项详见 #配置）
-  channels部分定义推送通道，name为名称，token、type定义见[pushoo](https://pushoo.js.org/)文档
-  auth部分定义登录用户密码，不需要可删除
-  样例配置文件：
+  - channels部分定义推送通道，name为名称，token、type定义见[pushoo](https://pushoo.js.org/)文档
+  - auth部分定义登录用户密码，不需要可删除
+  - 样例配置文件：
 ```
 channels:
   # tg channels
