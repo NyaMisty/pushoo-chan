@@ -3,8 +3,7 @@ import sendRouter from '@routes/send';
 import configRouter from '@routes/config';
 import qs from 'qs';
 import mime from 'mime-types';
-import path from 'path';
-import { RequestShim, ResponseShim } from '@shims/request';
+import { RequestShim } from '@shims/request';
 import { readStaticFile } from '@shims/fs';
 
 const router = Router()
@@ -48,23 +47,25 @@ const verifyBasicAuth = async (request: Request) => {
     }
     
     if (!request.headers.has('Authorization')) {
+        // Chrome does not support displaying realm in recent build... 
+        // so the auth msg is useless currently
         return failResp("No auth supplied", 
             config.auth ? 
                 undefined : 
                 DEFAULT_AUTH_MSG + ", password not set, please setup password!"
             )
-            // Chrome does not support displaying realm in recent build... so the auth msg is useless currently
     } else {
-        const basicAuth = auth.parse(request.headers.get('Authorization')!!)
-        if (basicAuth?.name == (config.auth!!.user || DEFAULT_USERNAME) 
-            && basicAuth?.pass == (config.auth!!.pass || DEFAULT_PASSWORD)) {
+        const authHdr = request.headers.get('Authorization') ?? ""
+        const basicAuth = auth.parse(authHdr)
+        if (basicAuth?.name == (config.auth.user || DEFAULT_USERNAME) 
+            && basicAuth?.pass == (config.auth.pass || DEFAULT_PASSWORD)) {
             return
         }
         return failResp("Wrong credential")
     }
 }
 
-const parseBody = async (request: Request) => {
+const parseBody = (request: Request) => {
     const reqshim = <RequestShim>(request as any)
     const contentType = request.headers.get('content-type')
     if (contentType?.startsWith("application/json")) {
@@ -88,7 +89,7 @@ const serveStatic = async (request: Request) => {
       if (relativePath.endsWith("/")) {
         relativePath = relativePath + "index.html"
       }
-      const fileContent = readStaticFile(relativePath)
+      const fileContent = await readStaticFile(relativePath)
       return {
             status: 200,
             body: fileContent,

@@ -1,7 +1,7 @@
 import logger from '@shims/logger';
 
 //import { Request, Response, Router } from '@shims/router';
-import { Router, Request } from 'itty-router';
+import { Router } from 'itty-router';
 
 import pushoo from 'pushoo';
 import { ChannelConfig, getAllChannel } from '@models/channels';
@@ -13,16 +13,19 @@ router.all('/', async (req: RequestShim) => {
     const text = req.bodyobj?.text || req.query?.text;
     const desp = req.bodyobj?.desp || req.query?.desp;
     const channame = req.bodyobj?.chan || req.query?.chan;
-    logger.info("Got send request: \n    text: " + text + "\n    desp: " + desp + "\n    chan: " + channame);
+    logger.info("Got send request: \n"
+                + "    text: " + text + "\n"
+                + "    desp: " + desp + "\n"
+                + "    chan: " + channame);
 
-    let msg: string[] = [];
+    const msg: string[] = [];
 
     const dolog = (logmsg: string) => {
         // console.log(logmsg)
         msg.push(logmsg)
     };
 
-    let { chan_map, default_chan } = await getAllChannel()
+    const { chan_map, default_chan } = await getAllChannel()
 
     let chans: ChannelConfig[] = [];
     if (channame === "all") {
@@ -56,8 +59,9 @@ router.all('/', async (req: RequestShim) => {
                     content: <string>desp
                 });
                 if (result.error) {
-                    console.log(result.error.stack)
-                    return "push error: " + result.error.toString();
+                    const err: Error = result.error
+                    logger.err(err)
+                    return "push error: " + err.toString();
                 } else {
                     return "push success: " + JSON.stringify(result)
                 }

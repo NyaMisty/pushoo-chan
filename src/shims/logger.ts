@@ -1,4 +1,5 @@
-export let doLog = function(msg: any) {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export const doLog = function(msg: any): void {
     throw new Error("unimplemented shim function: " + arguments.callee.name)
 }
 
@@ -7,8 +8,8 @@ export default {
         doLog("[INFO] " + msg)
     },
 
-    err(msg: any) {
-        doLog("[ERR] " + msg)
+    err(err: Error) {
+        doLog("[ERR] " + err.message + "\n" + err.stack)
     },
 
     warn(msg: any) {

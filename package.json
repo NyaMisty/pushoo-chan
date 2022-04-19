@@ -56,7 +56,8 @@
     }
   },
   "eslintIgnore": [
-    "src/public/",
+    "src/static/",
+    "dist",
     "build.ts"
   ],
   "dependencies": {
