@@ -2,10 +2,10 @@
   "name": "pushoo-chan",
   "version": "0.0.0",
   "scripts": {
-    "build": "npx ts-node build.ts",
+    "build": "npx tsc --build tsconfig.json && npx copyfiles src/static/* dist/static/",
     "build:webpack": "npx webpack",
-    "lint": "eslint . --ext .ts",
-    "start": "node -r module-alias/register ./dist --env=production",
+    "lint": "npx eslint . --ext .ts",
+    "start": "node -r module-alias/register ./dist/starter/node-http --env=production",
     "start:dev": "nodemon"
   },
   "main": "./dist/bundle.js",
@@ -15,7 +15,7 @@
     ],
     "ext": "ts, html",
     "ignore": [
-      "src/public"
+      "src/static"
     ],
     "exec": "npx ts-node -r tsconfig-paths/register ./src/starter/node-http"
   },
@@ -95,6 +95,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
+    "copyfiles": "^2.4.1",
     "eslint": "^8.13.0",
     "find": "^0.3.0",
     "fs-extra": "^10.1.0",
