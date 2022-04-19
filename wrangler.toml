@@ -1,8 +1,17 @@
 name = "pushoo-chan"
-type = "webpack"
+type = "javascript"
 route = ''
 zone_id = ''
 usage_model = ''
 compatibility_flags = []
 workers_dev = true
 compatibility_date = "2022-04-19"
+kv_namespaces = [
+    { binding = "PUSHOO_CONFIG", preview_id = "88c87b3004b94895943e50ea211e2f44", id = "499576c063f749729ab6ed98efc6b094" }
+]
+
+[build]
+command = "npm run build:webpack"
+
+[build.upload]
+format = "service-worker"

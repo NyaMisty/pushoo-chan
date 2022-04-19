@@ -1,17 +1,17 @@
 import { getConfig } from '@config/index';
 import { ChannelConfig } from '@config/type';
 
-export function getDefaultChannel() {
-    return getAllChannel()[getConfig().default_channel]
-}
-
-export function getAllChannel() {
-    const channels : ChannelConfig[] = getConfig().channels;
-    let ret: {[index: string]: ChannelConfig} = {};
+export async function getAllChannel() {
+    const config = await getConfig()
+    const channels : ChannelConfig[] = config.channels;
+    let chans: {[index: string]: ChannelConfig} = {};
     for (const channel of channels) {
-        ret[channel.name] = channel;
+        chans[channel.name] = channel;
     }
-    return ret;
+    return {
+        chan_map: chans,
+        default_chan: chans[config.default_channel]
+    };
 }
 
 export { ChannelConfig } from '@config/type';

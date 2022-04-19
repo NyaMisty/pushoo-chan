@@ -1,5 +1,12 @@
+/***********************************************************************************
+*                                  Shims
+**********************************************************************************/
+
 const _logger = require('@shims/logger');
 _logger.doLog = (msg: string) => {console.log(msg)}
+
+import { CloudflareWorkerKV } from 'types-cloudflare-worker';
+declare var PUSHOO_CONFIG: CloudflareWorkerKV;
 
 const KVConfig = typeof PUSHOO_CONFIG === 'undefined' ? null : PUSHOO_CONFIG;
 if (typeof KVConfig === 'undefined') {
@@ -7,8 +14,21 @@ if (typeof KVConfig === 'undefined') {
 }
 
 const _fs = require('@shims/fs')
-_fs.readFile = (filename: string) => KVConfig.get(filename)
-_fs.writeFile = (filename: string, content: string) => KVConfig.put(filename, content)
+_fs.readConfigFile = async (filename: string) => await KVConfig?.get(filename)
+_fs.writeConfigFile = async (filename: string, content: string) => await KVConfig?.put(filename, content)
+_fs.readStaticFile = async (filename: string) => ""
+
+
+import axios from "axios"
+import fetchAdapter from "@vespaiach/axios-fetch-adapter"
+axios.defaults.adapter = fetchAdapter
+
+
+ /***********************************************************************************
+ *                                  Framework
+ **********************************************************************************/
+ 
+
 
 async function handleEvent(event: any) {
     const request = event.request;
@@ -27,43 +47,35 @@ async function handleEvent(event: any) {
     };
 }
 
-import {Sunder, Router, Context} from "sunder";
-import { RouterShim } from '@shims/router';
+import itty from "itty-router";
+import allRouter from '@routes/index';
+import { RequestShim, ResponseShim } from '@shims/request';
+import { Request } from "node-fetch";
 
+const getRawBody = async (request: Request) => {
+    const buf = await request.text();
+    const reqshim = <RequestShim>(request as any)
+    reqshim.rawBody = buf
+}  
 
-const app = new Sunder();
-const router = new Router();
+const router = itty.Router();
 
-function transformIRouter(router: RouterShim) : Router {
-    const ret = Router()
-    for (const route of router.paths) {
-        (<any>ret)[route.type](
-            route.path, 
-            async (req: Request, res: Response) => {
-                const ret = await route.handler({
-                    method: req.method,
-                    body: req.body,
-                    query: <any>req.query,
-                    rawBody: (req as any).body
-                })
-                let t = res.status(ret.status)
-                if (ret.body) t = t.send(ret.body)
-                return t
-            }
-        )
+router.all("*", ({ method, url }) => console.log(`${method} ${url}`));
+
+router.all("*", getRawBody);
+
+router.all("*", allRouter.handle)
+
+// attach the router "handle" to the event handler
+addEventListener('fetch', <any>(async (event: FetchEvent) => {
+    const handler = async () => {
+        const respInfo: ResponseShim = await router.handle(event.request)
+        console.log(respInfo)
+        const resp = new Response(respInfo.body, {
+            status: respInfo.status,
+            headers: respInfo.headers,
+        })
+        return resp
     }
-    return ret
-}
-
-
-// Example route with a named parameter
-router.get("/hello/:username", ({response, params}) => {
-    response.body = `Hello ${params.username}`;
-});
-app.use(router.middlew);
-
-export default {
-    fetch(request: any, ctx: any, env: any) {
-        return app.fetch(request, ctx, env);
-    }
-};
+    event.respondWith(handler())
+}))

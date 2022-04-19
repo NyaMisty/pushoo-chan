@@ -4,7 +4,7 @@ import logger from '@shims/logger';
 import { Router, Request } from 'itty-router';
 
 import pushoo from 'pushoo';
-import { ChannelConfig, getAllChannel, getDefaultChannel } from '@models/channels';
+import { ChannelConfig, getAllChannel } from '@models/channels';
 import { RequestShim } from '@shims/request';
 
 const router = Router({ base: '/send' });
@@ -20,15 +20,17 @@ router.all('/', async (req: RequestShim) => {
     const dolog = (logmsg: string) => {
         // console.log(logmsg)
         msg.push(logmsg)
-    }
+    };
+
+    let { chan_map, default_chan } = await getAllChannel()
 
     let chans: ChannelConfig[] = [];
     if (channame === "all") {
-        chans = Object.values(getAllChannel());
+        chans = Object.values(chan_map);
     } else if (channame) {
         const channames = channame.split(',')
         for (const channame of channames) {
-            const chan = getAllChannel()[channame];
+            const chan = chan_map[channame];
             if (!chan) {
                 dolog('Warning: cannot find chan "' + channame + '" in channel config!')
             } else {
@@ -38,7 +40,7 @@ router.all('/', async (req: RequestShim) => {
     }
     if (!chans.length) {
         dolog('Warning: no valid channel specified, using default channel!');
-        chans = [getDefaultChannel()];
+        chans = [default_chan];
     }
 
     // console.log(chans);
@@ -54,6 +56,7 @@ router.all('/', async (req: RequestShim) => {
                     content: <string>desp
                 });
                 if (result.error) {
+                    console.log(result.error.stack)
                     return "push error: " + result.error.toString();
                 } else {
                     return "push success: " + JSON.stringify(result)

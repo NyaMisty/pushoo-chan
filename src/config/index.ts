@@ -6,23 +6,38 @@ let curConfig: Config | null = null;
 
 const CONFIG_FILE = "config.yaml"
 
-export function refreshConfig() {
+export async function refreshConfig() {
     curConfig = null;
-    getConfig()
+    await getConfig()
 }
 
-export function getRawConfig() {
-    return readConfigFile(CONFIG_FILE)
+export async function getRawConfig() {
+    return await readConfigFile(CONFIG_FILE)
 }
 
-export function getConfig() : Config {
+const DEFAULT_CONFIG = 
+`channels:
+  - name: stub_channel
+    type: stub
+    token: stub
+
+default_channel: stub_channel
+
+auth:
+    # uncomment to enable basic authentication
+    #user: pushoo
+    #pass: pushoo
+`
+
+export async function getConfig() {
     if (curConfig === null) {
-        curConfig = <Config>YAML.parse(getRawConfig())
+        const rawConfig = await getRawConfig() || DEFAULT_CONFIG
+        curConfig = <Config>YAML.parse(rawConfig)
     }
     return curConfig
 }
 
-export function setRawConfig(rawBody: string) {
-    writeConfigFile(CONFIG_FILE, rawBody)
-    refreshConfig()
+export async function setRawConfig(rawBody: string) {
+    await writeConfigFile(CONFIG_FILE, rawBody)
+    await refreshConfig()
 }

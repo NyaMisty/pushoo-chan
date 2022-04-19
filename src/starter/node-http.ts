@@ -10,18 +10,19 @@ const _fs = require('@shims/fs')
 import fs from 'fs'
 _fs.readConfigFile = (filename: string) => fs.readFileSync(filename).toString()
 _fs.writeConfigFile = (filename: string, content: string) => fs.writeFileSync(filename, content)
-_fs.readStaticFile = (filename: string) => fs.readFileSync(__dirname + "/../static/" + filename)
+_fs.readStaticFile = (filename: string) => fs.readFileSync(__dirname + "/../static/" + filename).toString()
 
 /***********************************************************************************
 *                                  Framework
 **********************************************************************************/
 
 
-import { Request, Response } from "node-fetch";
-import { createServer } from "node:http";
 import itty from "itty-router";
 import allRouter from '@routes/index';
+
+import { createServer } from "node:http";
 import { IncomingMessage, ServerResponse } from 'http';
+import { Request, Response } from "node-fetch";
 import { RequestShim, ResponseShim } from '@shims/request';
 
 const getRawBody = async (request: Request) => {

@@ -5,14 +5,16 @@ import { RequestShim } from '@shims/request';
 
 const router = Router({ base: '/config' });
 
-router.get('/download', (_: Request) => {
+router.get('/download', async (_: Request) => {
+    const rawConfig = await getRawConfig()
+    console.log("111: " + rawConfig)
     return {
         status: 200, 
-        body: getRawConfig()
+        body: rawConfig
     };
 });
 
-router.post('/upload', (req: RequestShim) => {
+router.post('/upload', async (req: RequestShim) => {
     setRawConfig(req.rawBody)
     return {
         status: 200, 
