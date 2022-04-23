@@ -2,9 +2,12 @@ import { Router } from 'itty-router'
 import sendRouter from '@routes/send';
 import configRouter from '@routes/config';
 import qs from 'qs';
+import content_type from 'content-type'
 import mime from 'mime-types';
-import { RequestShim } from '@shims/request';
+import iconv from 'iconv-lite';
+import { Obj, RequestShim } from '@shims/request';
 import { readStaticFile } from '@shims/fs';
+import logger from '@shims/logger'
 
 const router = Router()
 
@@ -65,15 +68,104 @@ const verifyBasicAuth = async (request: Request) => {
     }
 }
 
+const processQuery = (request: Request) => {
+    const reqshim = <RequestShim>(request as any)
+    
+    const { search, searchParams } = new URL(request.url)
+    if (!search.length) return
+    if (!searchParams.has('charset')) return
+    
+    reqshim.encoding = searchParams.get('charset') || undefined
+    if (reqshim.encoding) {
+        logger.reqlog(reqshim, 
+            `parseQuery: got override charset in query param: ${reqshim.encoding}`)
+    }
+
+    const targetCharset = searchParams.get('charset') || 'utf-8'
+    const newQueryObj: Obj = <Obj>qs.parse(search, { 
+        decoder(str: string, _defaultDecoder: any, _charset: string, _type: any) {
+            const strWithoutPlus = str.replace(/\+/g, ' ');
+            const rawstr = strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+            
+            const buf = new ArrayBuffer(rawstr.length);
+            const bufView = new Uint8Array(buf);
+            for (let i=0; i < rawstr.length; i++) {
+                bufView[i] = rawstr.charCodeAt(i);
+            }
+            return iconv.decode(new Buffer(bufView), targetCharset)
+        },
+        ignoreQueryPrefix: true,
+    })
+    reqshim.query_ = newQueryObj
+}
+
+const decodeRawBody = (request: Request) => {
+    const reqshim = <RequestShim>(request as any)
+
+    let body : string | null = null
+    let charset : string | null = null
+
+    if (reqshim.encoding) {
+        // if we got charset from processQuery, we directly use it
+        charset = reqshim.encoding
+    } else {
+        // then, we retrive them from content-type
+        const contentType = request.headers.get('content-type')
+        if (contentType) {
+            const { parameters: contentTypeParas } = content_type.parse(contentType)
+            charset = contentTypeParas.charset || null
+        }
+        // else, we guess them!
+        if (!charset) {
+            const tempBody = reqshim.rawBodyBuf.toString()
+            const re1 = /([^A-z]|^)charset=(?<charset>[A-z0-9-]+?)&/g
+            const match1 = re1.exec(tempBody)
+            if (match1 && match1.groups?.charset) {
+                charset = match1.groups.charset
+                reqshim.logs.push(`decodeBody: guessed charset ${charset} using form parameter`)
+            }
+            const re2 = /([^\\])"charset": *"(?<charset>[A-z0-9-]+?)"/g
+            const match2 = re2.exec(tempBody)
+            if (match2 && match2.groups?.charset) {
+                charset = match2.groups.charset
+                reqshim.logs.push(`decodeBody: guessed charset ${charset} using json parameter`)
+            }
+        }
+    }
+    
+    if (charset && !iconv.encodingExists(charset)) {
+        logger.reqlog(reqshim, `decodeBody: charset ${charset || 'null'} not available`)
+        charset = null
+    }
+    charset = charset || 'utf-8'
+    reqshim.encoding = charset
+    body = iconv.decode(reqshim.rawBodyBuf, charset)
+
+    if (body === null) {
+        logger.reqlog(reqshim, `decodeBody: charset decoding failed, fall back to default decoding`)
+        body = reqshim.rawBodyBuf.toString()
+    }
+    
+    reqshim.rawBody = body
+    return
+}
+
 const parseBody = (request: Request) => {
     const reqshim = <RequestShim>(request as any)
     const contentType = request.headers.get('content-type')
-    if (contentType?.startsWith("application/json")) {
+    const contentTypeInfo = content_type.parse(contentType || "")
+    reqshim.bodyobj = {}
+    if (contentTypeInfo.type == "application/json") {
         reqshim.bodyobj = jsonparse(reqshim.rawBody)
-    } else if (contentType?.startsWith("application/x-www-form-urlencoded")) {
+    } else if (contentTypeInfo.type == "application/x-www-form-urlencoded") {
         reqshim.bodyobj = queryparse(reqshim.rawBody)
     } else {
-        reqshim.bodyobj = {}
+        // auto detect body type
+        if (reqshim.rawBody.startsWith('{')) {
+            reqshim.bodyobj = jsonparse(reqshim.rawBody)
+        } else {
+            reqshim.bodyobj = queryparse(reqshim.rawBody)
+        }
     }
 }
 
@@ -105,6 +197,9 @@ const serveStatic = async (request: Request) => {
 }
 
 router
+    .all('*', (req: RequestShim) => { req.logs = [] })
+    .all('*', processQuery)
+    .all('*', decodeRawBody)
     .all('*', parseBody)
     .all('/send/*', sendRouter.handle) // attach child router
 

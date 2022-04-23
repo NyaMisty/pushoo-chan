@@ -4,12 +4,19 @@ export type Obj = {
 
 export interface RequestShim {
     method: string
+    url: string
+    
+    encoding?: string
+    
     params?: Obj
     query?: Obj
-    url: string
+    query_?: Obj
 
+    rawBodyBuf: Buffer
     rawBody: string
     bodyobj: Obj
+
+    logs: string[]
 }
 
 export interface ResponseShim {
