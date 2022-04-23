@@ -52,10 +52,17 @@ import { RequestShim, ResponseShim } from '@shims/request';
 import { Request } from "node-fetch";
 import logger from '@shims/logger';
 
+import { decodeBuffer } from "http-encoding";
+
 const getRawBody = async (request: Request) => {
-    const buf = await request.text();
     const reqshim = <RequestShim>(request as any)
-    reqshim.rawBody = buf
+
+    const encoding = (request.headers.get('content-encoding') || 'identity').toLowerCase()
+    // const length = request.headers.get('content-length')
+    const decodedBuf = await decodeBuffer(await request.arrayBuffer(), encoding)
+    reqshim.rawBodyBuf = decodedBuf
+    
+    //const body = await request.text();
 }  
 
 const router = itty.Router();

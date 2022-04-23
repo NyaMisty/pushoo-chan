@@ -30,9 +30,10 @@ import { Request } from "node-fetch";
 import { RequestShim, ResponseShim } from '@shims/request';
 
 const getRawBody = async (request: Request) => {
-  const buf = await request.buffer();
   const reqshim = <RequestShim>(request as any)
-  reqshim.rawBody = buf.toString()
+  const buf = await request.buffer();
+  reqshim.rawBodyBuf = buf
+  // reqshim.rawBody = buf.toString()
 }
 
 const router = itty.Router();
