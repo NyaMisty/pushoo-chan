@@ -153,11 +153,11 @@ const decodeRawBody = (request: Request) => {
 const parseBody = (request: Request) => {
     const reqshim = <RequestShim>(request as any)
     const contentType = request.headers.get('content-type')
-    const contentTypeInfo = content_type.parse(contentType || "")
+    const contentTypeInfo = contentType ? content_type.parse(contentType) : undefined
     reqshim.bodyobj = {}
-    if (contentTypeInfo.type == "application/json") {
+    if (contentTypeInfo?.type == "application/json") {
         reqshim.bodyobj = jsonparse(reqshim.rawBody)
-    } else if (contentTypeInfo.type == "application/x-www-form-urlencoded") {
+    } else if (contentTypeInfo?.type == "application/x-www-form-urlencoded") {
         reqshim.bodyobj = queryparse(reqshim.rawBody)
     } else {
         // auto detect body type
