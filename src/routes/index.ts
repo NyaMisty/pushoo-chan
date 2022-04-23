@@ -14,12 +14,27 @@ const router = Router()
 // const staticDir = path.join(__dirname, '../static');
 // app.use((staticDir));
 
-function queryparse (body: string): any {
+function get_qs_decoder(charset: string) {
+    return (str: string, _defaultDecoder: any, _charset: string, _type: any) => {
+        const strWithoutPlus = str.replace(/\+/g, ' ');
+        const rawstr = strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
+        
+        const buf = new ArrayBuffer(rawstr.length);
+        const bufView = new Uint8Array(buf);
+        for (let i=0; i < rawstr.length; i++) {
+            bufView[i] = rawstr.charCodeAt(i);
+        }
+        return iconv.decode(new Buffer(bufView), charset)
+    }
+}
+
+function queryparse (body: string, charset?: string): any {
     return qs.parse(body, {
         allowPrototypes: true,
         arrayLimit: 100,
         depth: Infinity,
-        parameterLimit: 100
+        parameterLimit: 100,
+        decoder: get_qs_decoder(charset ?? 'utf-8'),
     })
 }
 
@@ -83,17 +98,7 @@ const processQuery = (request: Request) => {
 
     const targetCharset = searchParams.get('charset') || 'utf-8'
     const newQueryObj: Obj = <Obj>qs.parse(search, { 
-        decoder(str: string, _defaultDecoder: any, _charset: string, _type: any) {
-            const strWithoutPlus = str.replace(/\+/g, ' ');
-            const rawstr = strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
-            
-            const buf = new ArrayBuffer(rawstr.length);
-            const bufView = new Uint8Array(buf);
-            for (let i=0; i < rawstr.length; i++) {
-                bufView[i] = rawstr.charCodeAt(i);
-            }
-            return iconv.decode(new Buffer(bufView), targetCharset)
-        },
+        decoder: get_qs_decoder(targetCharset),
         ignoreQueryPrefix: true,
     })
     reqshim.query_ = newQueryObj
@@ -154,17 +159,18 @@ const parseBody = (request: Request) => {
     const reqshim = <RequestShim>(request as any)
     const contentType = request.headers.get('content-type')
     const contentTypeInfo = contentType ? content_type.parse(contentType) : undefined
+    
     reqshim.bodyobj = {}
     if (contentTypeInfo?.type == "application/json") {
         reqshim.bodyobj = jsonparse(reqshim.rawBody)
     } else if (contentTypeInfo?.type == "application/x-www-form-urlencoded") {
-        reqshim.bodyobj = queryparse(reqshim.rawBody)
+        reqshim.bodyobj = queryparse(reqshim.rawBody, reqshim.encoding)
     } else {
         // auto detect body type
         if (reqshim.rawBody.startsWith('{')) {
             reqshim.bodyobj = jsonparse(reqshim.rawBody)
         } else {
-            reqshim.bodyobj = queryparse(reqshim.rawBody)
+            reqshim.bodyobj = queryparse(reqshim.rawBody, reqshim.encoding)
         }
     }
 }
