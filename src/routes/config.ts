@@ -9,7 +9,10 @@ router.get('/download', async () => {
     const rawConfig = await getRawConfig()
     return {
         status: 200, 
-        body: rawConfig
+        body: rawConfig,
+        headers: {
+            'content-type': 'text/plain; charset=utf-8'
+        }
     };
 });
 
