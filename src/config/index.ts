@@ -23,6 +23,11 @@ const DEFAULT_CONFIG =
     type: stub
     token: stub
 
+channel_groups:
+  - name: stub_gruop
+    use:
+      - stub_channel
+
 default_channel: stub_channel
 
 auth:
