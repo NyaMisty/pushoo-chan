@@ -4,27 +4,27 @@ import logger from '@shims/logger';
 import { Router } from 'itty-router';
 
 import pushoo from 'pushoo';
-import { ChannelConfig, getAllChanName, getAllChannel, getRealChannelList } from '@models/channels';
+import { ChannelConfig, getRealChannelList } from '@models/channels';
 import { RequestShim } from '@shims/request';
 
 const router = Router({ base: '/send' });
 
 router.all('/', async (req: RequestShim) => {
-    const text = req.bodyobj?.text || req.query?.text;
-    const desp = req.bodyobj?.desp || req.query?.desp;
+    const text = req.bodyobj?.text || req.query_?.text || req.query?.text;
+    const desp = req.bodyobj?.desp || req.query_?.desp || req.query?.desp;
     const channame = req.bodyobj?.chan || req.query?.chan;
     logger.info("Got send request: \n"
                 + `    text: ${text ?? 'undefined'}\n`
                 + `    desp: ${desp ?? 'undefined'}\n`
-                + `    chan: ${channame ?? 'undefined'}`
+                + `    chan: ${channame ?? 'undefined'}\n`
                 );
 
-    let msg: string[] = [];
     let results: string[] = [];
 
     const dolog = (logmsg: string) => {
         // console.log(logmsg)
-        msg.push(logmsg)
+        logger.reqlog(req, 'send: ' + logmsg)
+        // msg.push(logmsg)
     };
 
     try {
@@ -32,14 +32,18 @@ router.all('/', async (req: RequestShim) => {
         // const { channames, default_channame } = await getAllChanName()
 
         let chans: ChannelConfig[] = [];
-        const channames = (channame || "").split(',')
+        let channames = channame?.split(',') || []
+        channames = channames.filter((item) => item.length > 0)
+        
         if (!channames.length) {
-            dolog('Warning: no valid channel specified, using default channel!');
+            dolog('Warning: no channel specified, using default channel!');
         }
         try {
             const { chans: _chans, logmsg: getChanLog } = await getRealChannelList(channames)
             chans = _chans
-            msg = msg.concat(getChanLog)
+            for (const logline of getChanLog) {
+                dolog(logline)
+            }
         } catch (e) {
             const _e = <Error>e
             dolog("Get channels to send failed: " + _e.toString())
@@ -86,12 +90,12 @@ router.all('/', async (req: RequestShim) => {
             dolog("unknown error during send: " + _e.toString())
         }
     }
-    logger.info(`Got results: ${JSON.stringify(results)} msg: ${JSON.stringify(msg)}`)
+    logger.info(`Got results: ${JSON.stringify(results)} logs: ${JSON.stringify(req.logs)}`)
     return {
         status: 200,
         body: JSON.stringify({
                 results: results.length ? results : undefined,
-                msg: msg.length ? msg : undefined
+                msg: req.logs.length ? req.logs : undefined
             }, null, 4),
         headers: {
             'content-type': 'application/json; charset=utf-8'
