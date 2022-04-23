@@ -89,12 +89,19 @@ const serveStatic = async (request: Request) => {
       if (relativePath.endsWith("/")) {
         relativePath = relativePath + "index.html"
       }
-      const fileContent = await readStaticFile(relativePath)
-      return {
-            status: 200,
-            body: fileContent,
-            headers: { "content-type": mime.lookup(relativePath) },
-        };
+      try {
+          const fileContent = await readStaticFile(relativePath)
+          return {
+                status: 200,
+                body: fileContent,
+                headers: { "content-type": mime.lookup(relativePath) },
+            };
+      } catch (e) {
+          return {
+              status: 404,
+              body: "Not Found"
+          }
+      }
 }
 
 router

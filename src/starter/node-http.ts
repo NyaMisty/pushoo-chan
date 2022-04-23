@@ -44,13 +44,13 @@ router.all("*", getRawBody);
 router.all("*", allRouter.handle)
 
 function handler(nodeReq: IncomingMessage, nodeRes: ServerResponse) {
-  async () => {
+  (async () => {
     const request = await convertRequest(nodeReq);
     const response: ResponseShim = await router.handle(request);
     // console.log(response)
     nodeRes.writeHead(response.status, response.headers);
     nodeRes.end(response.body);
-  }
+  })()
 }
 
 const server = createServer(handler);
