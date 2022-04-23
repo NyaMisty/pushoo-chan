@@ -55,7 +55,7 @@ import logger from '@shims/logger';
 import { decodeBuffer } from "http-encoding";
 
 const getRawBody = async (request: Request) => {
-    const reqshim = <RequestShim>(request as any)
+    const reqshim = <RequestShim>(request as unknown)
 
     const encoding = (request.headers.get('content-encoding') || 'identity').toLowerCase()
     // const length = request.headers.get('content-length')

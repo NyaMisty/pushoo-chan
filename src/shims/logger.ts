@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { RequestShim } from "./request"
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
-export const doLog = function(msg: any): void {
+export const doLog = function(_msg: string): void {
     throw new Error("unimplemented shim function: " + arguments.callee.name)
 }
 

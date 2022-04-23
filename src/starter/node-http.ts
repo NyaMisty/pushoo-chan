@@ -30,7 +30,7 @@ import { Request } from "node-fetch";
 import { RequestShim, ResponseShim } from '@shims/request';
 
 const getRawBody = async (request: Request) => {
-  const reqshim = <RequestShim>(request as any)
+  const reqshim = <RequestShim>(request as unknown)
   const buf = await request.buffer();
   reqshim.rawBodyBuf = buf
   // reqshim.rawBody = buf.toString()
@@ -58,6 +58,7 @@ const server = createServer(handler);
 
 server.listen(4000, () => console.log(`http://localhost:4000`));
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 async function convertRequest(req: IncomingMessage) {
   const { headers, method } = req;
   const url = `http://${req.headers.host ?? ""}${req.url ?? ""}`;

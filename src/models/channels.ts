@@ -1,6 +1,5 @@
 import { getConfig } from '@config/index';
 import { ChannelConfig, ChannelGroupConfig } from '@config/type';
-import logger from '@shims/logger';
 
 export async function getAllChannel() {
     const config = await getConfig()

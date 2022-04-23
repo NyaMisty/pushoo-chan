@@ -15,7 +15,7 @@ const router = Router()
 // app.use((staticDir));
 
 function get_qs_decoder(charset: string) {
-    return (str: string, _defaultDecoder: any, _charset: string, _type: any) => {
+    return (str: string, _defaultDecoder: unknown, _charset: string, _type: unknown) => {
         const strWithoutPlus = str.replace(/\+/g, ' ');
         const rawstr = strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
         
@@ -28,7 +28,7 @@ function get_qs_decoder(charset: string) {
     }
 }
 
-function queryparse (body: string, charset?: string): any {
+function queryparse (body: string, charset?: string) {
     return qs.parse(body, {
         allowPrototypes: true,
         arrayLimit: 100,
@@ -38,7 +38,7 @@ function queryparse (body: string, charset?: string): any {
     })
 }
 
-function jsonparse (body: string): any {
+function jsonparse (body: string) {
     return JSON.parse(body)
 }
 
@@ -84,7 +84,7 @@ const verifyBasicAuth = async (request: Request) => {
 }
 
 const processQuery = (request: Request) => {
-    const reqshim = <RequestShim>(request as any)
+    const reqshim = <RequestShim>(request as unknown)
     
     const { search, searchParams } = new URL(request.url)
     if (!search.length) return
@@ -105,7 +105,7 @@ const processQuery = (request: Request) => {
 }
 
 const decodeRawBody = (request: Request) => {
-    const reqshim = <RequestShim>(request as any)
+    const reqshim = <RequestShim>(request as unknown)
 
     let body : string | null = null
     let charset : string | null = null
@@ -156,21 +156,21 @@ const decodeRawBody = (request: Request) => {
 }
 
 const parseBody = (request: Request) => {
-    const reqshim = <RequestShim>(request as any)
+    const reqshim = <RequestShim>(request as unknown)
     const contentType = request.headers.get('content-type')
     const contentTypeInfo = contentType ? content_type.parse(contentType) : undefined
     
     reqshim.bodyobj = {}
     if (contentTypeInfo?.type == "application/json") {
-        reqshim.bodyobj = jsonparse(reqshim.rawBody)
+        reqshim.bodyobj = <Obj>jsonparse(reqshim.rawBody)
     } else if (contentTypeInfo?.type == "application/x-www-form-urlencoded") {
-        reqshim.bodyobj = queryparse(reqshim.rawBody, reqshim.encoding)
+        reqshim.bodyobj = <Obj>queryparse(reqshim.rawBody, reqshim.encoding)
     } else {
         // auto detect body type
         if (reqshim.rawBody.startsWith('{')) {
-            reqshim.bodyobj = jsonparse(reqshim.rawBody)
+            reqshim.bodyobj = <Obj>jsonparse(reqshim.rawBody)
         } else {
-            reqshim.bodyobj = queryparse(reqshim.rawBody, reqshim.encoding)
+            reqshim.bodyobj = <Obj>queryparse(reqshim.rawBody, reqshim.encoding)
         }
     }
 }
