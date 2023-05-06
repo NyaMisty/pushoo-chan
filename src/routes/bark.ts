@@ -45,7 +45,7 @@ router.all('*', async (req: RequestShim) => {
             content = urlParts[2]
         }
     }
-    if (req.bodyobj_type == 'form') {
+    if (req.bodyobj_type == 'form' || req.bodyobj_type == 'json') {
         content = req.bodyobj?.body || content
         title = req.bodyobj?.title || title
     } else {
