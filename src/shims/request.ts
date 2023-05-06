@@ -5,16 +5,19 @@ export type Obj = {
 export interface RequestShim {
     method: string
     url: string
+    pathname: string
     
     encoding?: string
     
     params?: Obj
-    query?: Obj
-    query_?: Obj
+    query?: Obj // original query object
+    query_?: Obj // query object after converting charset
 
     rawBodyBuf: Buffer
     rawBody: string
-    bodyobj: Obj
+    
+    bodyobj?: Obj
+    bodyobj_type?: string
 
     logs: string[]
 }
