@@ -1,5 +1,7 @@
 import { Router } from 'itty-router'
 import sendRouter from '@routes/send';
+import barkRouter from '@routes/bark';
+import barkv2Router from '@routes/barkv2';
 import configRouter from '@routes/config';
 import qs from 'qs';
 import content_type from 'content-type'
@@ -86,7 +88,10 @@ const verifyBasicAuth = async (request: Request) => {
 const processQuery = (request: Request) => {
     const reqshim = <RequestShim>(request as unknown)
     
-    const { search, searchParams } = new URL(request.url)
+    const { pathname, search, searchParams } = new URL(request.url)
+    
+    reqshim.pathname = pathname
+    
     if (!search.length) return
     if (!searchParams.has('charset')) return
     
@@ -163,14 +168,18 @@ const parseBody = (request: Request) => {
     reqshim.bodyobj = {}
     if (contentTypeInfo?.type == "application/json") {
         reqshim.bodyobj = <Obj>jsonparse(reqshim.rawBody)
+        reqshim.bodyobj_type = 'json'
     } else if (contentTypeInfo?.type == "application/x-www-form-urlencoded") {
         reqshim.bodyobj = <Obj>queryparse(reqshim.rawBody, reqshim.encoding)
+        reqshim.bodyobj_type = 'form'
     } else {
         // auto detect body type
         if (reqshim.rawBody.startsWith('{')) {
             reqshim.bodyobj = <Obj>jsonparse(reqshim.rawBody)
+            reqshim.bodyobj_type = 'json'
         } else {
             reqshim.bodyobj = <Obj>queryparse(reqshim.rawBody, reqshim.encoding)
+            reqshim.bodyobj_type = 'form'
         }
     }
 }
@@ -207,7 +216,9 @@ router
     .all('*', processQuery)
     .all('*', decodeRawBody)
     .all('*', parseBody)
-    .all('/send/*', sendRouter.handle) // attach child router
+    .all('/send/*', sendRouter.handle)
+    .all('/bark/*', barkRouter.handle)
+    .all('/barkv2/*', barkv2Router.handle)
 
     .all('*', verifyBasicAuth)
     .all('/config/*', configRouter.handle) // attach child router
