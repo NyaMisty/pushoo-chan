@@ -1,17 +1,11 @@
 name = "pushoo-chan"
-type = "javascript"
-route = ''
-zone_id = ''
-usage_model = ''
-compatibility_flags = []
-workers_dev = true
+main = "dist/bundle.js"
 compatibility_date = "2022-04-19"
-kv_namespaces = [
-    { binding = "PUSHOO_CONFIG", preview_id = "348c9555833c4ea8b1bb7d63e6b4e431", id = "499576c063f749729ab6ed98efc6b094" }
-]
+
+[[kv_namespaces]]
+binding = "PUSHOO_CONFIG"
+id = "499576c063f749729ab6ed98efc6b094"
+preview_id = "348c9555833c4ea8b1bb7d63e6b4e431"
 
 [build]
 command = "npm run build:webpack"
-
-[build.upload]
-format = "service-worker"
